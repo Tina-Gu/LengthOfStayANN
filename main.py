@@ -5,6 +5,13 @@ from sklearn.neural_network import MLPClassifier
 from sklearn import preprocessing
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.ensemble import RandomForestRegressor
+from sklearn import preprocessing  
+from keras import optimizers
+from keras.models import Sequential
+from keras.layers import Dense
+from keras import losses
+from keras.layers import Dropout
+from sklearn.decomposition import PCA
 
 
 
@@ -13,7 +20,7 @@ pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
 
-def gendata(PCA):
+def gendata(doPCA):
 
     # Create dataframe from csv
     data = pd.read_csv('https://raw.githubusercontent.com/microsoft/r-server-hospital-length-of-stay/master/Data/LengthOfStay.csv')
@@ -56,10 +63,16 @@ def gendata(PCA):
     data['respiration'] = preprocessing.StandardScaler().fit_transform(respiration)
 
 
-
     # ADD PCA CONSIDERATIONS
-    if PCA:
-        pass
+    if doPCA:
+        pca = PCA()   
+        data=pca.fit_transform(data)
+        train_X = np.array(data[:80000])
+        train_Y = labels.head(n=80000).to_numpy()
+        test_X = np.array(data[80000:])
+        test_Y = labels.tail(n=20000).to_numpy()
+        return train_X, test_X, train_Y, test_Y
+        
 
     # Seperate for train and test
     train_X = data.head(n=80000).to_numpy()
@@ -100,7 +113,15 @@ def tina(train_X, test_X, train_Y, test_Y):
 
 
 def aimee(train_X, test_X, train_Y, test_Y):
-    pass
+    model = Sequential()
+    model.add(Dense(units = 68,  input_dim =34 ,  kernel_initializer =  'normal' ,  activation = 'sigmoid'))
+    model.add(Dense(units = 17, kernel_initializer =  'normal',activation = 'relu'))
+    model.add(Dense(units = 1, kernel_initializer =  'normal'))
+    adam=optimizers.Adam(lr=0.001,  epsilon=None, decay=0.0, amsgrad=False)
+    model.compile(optimizer=adam, loss='mean_squared_error') 
+    model.fit(train_X, train_Y, epochs=200,verbose=2)
+    loss = model.evaluate(test_X,  test_Y,verbose=2)
+    print("The mean square error is:", loss)
 
 def calub(train_X, test_X, train_Y, test_Y):
     pass
@@ -118,6 +139,11 @@ def main():
 
     print("Starting Patricks Code for 128, 64, 32, 'relu', 0.01 ")
     patrick(train_X, test_X, train_Y, test_Y, 128, 64, 32, 'relu', 0.01)
+    
+    print("Starting Aimee Code")
+    patrick(pcaTrain_X, pcaTest_X, pcaTrain_Y, pcaTest_Y )
+    
+    
 
 
 
