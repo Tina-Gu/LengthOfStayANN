@@ -141,7 +141,7 @@ def main():
     patrick(train_X, test_X, train_Y, test_Y, 128, 64, 32, 'relu', 0.01)
     
     print("Starting Aimee Code")
-    patrick(pcaTrain_X, pcaTest_X, pcaTrain_Y, pcaTest_Y )
+    aimee(pcaTrain_X, pcaTest_X, pcaTrain_Y, pcaTest_Y )
     
     
 
