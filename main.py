@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import tensorflow as tf
 from sklearn.metrics import classification_report
 from sklearn.neural_network import MLPClassifier
 from sklearn import preprocessing
@@ -100,16 +101,47 @@ def patrick(train_X, test_X, train_Y, test_Y, f,s,t,a,lr):
 
 
 def tina(train_X, test_X, train_Y, test_Y):
+    train_X = tf.cast(train_X, tf.float32)
+    test_X = tf.cast(test_X, tf.float32)
 
-    reg_model = RandomForestRegressor(random_state=0)
-    reg_model.fit(train_X, train_Y)
-    y_test_preds = reg_model.predict(test_X)
-    results = r2_score(test_Y, y_test_preds)
-    print('R2 score: ', results)
-    mse = mean_squared_error(test_Y, y_test_preds)
-    rmse = mse ** 0.5
+    train_db=tf.data.Dataset.from_tensor_slices((train_X,train_Y)).batch(2000)
+    test_db=tf.data.Dataset.from_tensor_slices((test_X,test_Y)).batch(2000)
+    w1 = tf.Variable(tf.random.truncated_normal([33, 17], stddev=0.1, seed=1))
+    b1 = tf.Variable(tf.random.truncated_normal([17], stddev=0.1, seed=1))
+
+    lr, epoch, loss_all = 0.1,15000,0
+    for epoch in range(epoch):  
+        for step, (train_X, train_Y) in enumerate(train_db):
+            with tf.GradientTape() as tape:
+                y = tf.matmul(train_X, w1) + b1  
+                y = tf.nn.softmax(y)  
+                d = tf.one_hot(train_Y, depth=17)
+                loss = tf.reduce_mean(tf.square(d - y)) 
+                loss_all += loss.numpy()  
+            
+            grads = tape.gradient(loss, [w1, b1])
+            w1.assign_sub(lr * grads[0])
+            b1.assign_sub(lr * grads[1])
+        loss_all = 0  
+        
+        total_correct, total_number = 0, 0
+        for test_X, test_Y in test_db:
+            y = tf.matmul(test_X, w1) + b1
+            y = tf.nn.softmax(y)
+            pred = tf.argmax(y, axis=1)  
+            pred = tf.cast(pred, dtype=test_Y.dtype)
+            correct = tf.cast(tf.equal(pred, test_Y), dtype=tf.int32)
+            correct = tf.reduce_sum(correct)
+            total_correct += int(correct)
+            total_number += test_X.shape[0]
+        acc = total_correct / total_number
+    print("Test_acc:", acc)
+    mse = mean_squared_error(d,y)
+    rmse = mse** 0.5
     print("MSE: %.4f" % mse)
     print("RMSE: %.4f" % rmse)
+        
+
 
 
 def aimee(train_X, test_X, train_Y, test_Y):
