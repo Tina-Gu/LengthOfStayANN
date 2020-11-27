@@ -4,8 +4,15 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.neural_network import MLPClassifier
 from sklearn import preprocessing
+from sklearn.cluster import KMeans
 from sklearn.metrics import r2_score, mean_squared_error
+from sklearn.pipeline import make_pipeline
+from sklearn.metrics import accuracy_score
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.preprocessing import StandardScaler
+import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
 from keras import optimizers
 from keras.models import Sequential
 from keras.layers import Dense
@@ -193,7 +200,29 @@ def aimee(train_X, test_X, train_Y, test_Y):
     print("The mean square error is:", loss, "The accuracy is: ")
 
 def caleb(train_X, test_X, train_Y, test_Y):
-    pass
+    train_X= np.reshape(train_X,(train_X.shape[0], 1, train_X.shape[1]))
+    test_X= np.reshape(test_X,(test_X.shape[0], 1, test_X.shape[1]))
+    
+    model = keras.Sequential()
+    model.add(layers.Bidirectional(layers.LSTM(32, return_sequences=True, activation="tanh", recurrent_activation="sigmoid"), input_shape=(1, 34,)))
+    model.add(layers.Bidirectional(layers.LSTM(128, return_sequences=True, activation="tanh", recurrent_activation="sigmoid", recurrent_dropout=0.1), input_shape=(1, 34)))
+    model.add(layers.Dense(units = 18))
+
+    #model.summary()
+    model.compile(
+        loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        optimizer="adam",
+        metrics=["accuracy"])
+    
+    model.fit(train_X, train_Y, validation_data=(test_X, test_Y), epochs=30, batch_size = 50, verbose=0)
+    results = model.evaluate(test_X, test_Y, verbose=0)
+    vectors = model.predict(test_X)
+    vectors= np.reshape(vectors,(vectors.shape[0], vectors.shape[2]))
+    
+    clf = make_pipeline(StandardScaler(), MLPClassifier(max_iter=1000, solver='adam', activation='logistic', hidden_layer_sizes=(32, 64, 17), batch_size=100)).fit(vectors, test_Y)
+    pred = clf.predict(vectors)
+    print("Accuracy of mlp", accuracy_score(pred, test_Y))
+    print("MSE", mean_squared_error(pred, test_Y))
 
 
 def main():
@@ -213,6 +242,10 @@ def main():
     print("\nStarting Tina Code\n")
     print("----------------------Tina Code Results----------------------------")
     tina(pcaTrain_X, pcaTest_X, pcaTrain_Y, pcaTest_Y)
+    
+    print("Starting Caleb Code\n")
+    print("----------------------Caleb Code Results----------------------------")
+    caleb(pcaTrain_X, pcaTest_X, pcaTrain_Y, pcaTest_Y )
     
     
 
