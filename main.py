@@ -1,17 +1,19 @@
 import pandas as pd
 import numpy as np
 from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
 from sklearn.neural_network import MLPClassifier
 from sklearn import preprocessing
 from sklearn.metrics import r2_score, mean_squared_error
 from sklearn.ensemble import RandomForestRegressor
-from sklearn import preprocessing  
 from keras import optimizers
 from keras.models import Sequential
 from keras.layers import Dense
 from keras import losses
 from keras.layers import Dropout
 from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+import itertools
 
 
 
@@ -83,20 +85,74 @@ def gendata(doPCA):
 
     return train_X, test_X, train_Y, test_Y
 
+def plot_confusion_matrix(cm, classes, title,normalize=True, cmap=plt.cm.Blues):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+    """
+
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes)
+
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, format(cm[i, j], fmt),
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+    plt.tight_layout()
+
+def brute_force_parameters():
+
+    listOLists = [[128, 64, 32, 16], [128, 64, 32, 16], [128, 64, 32, 16], ['identity', 'logistic', 'tanh', 'relu'],
+                  [0.001]]
+    count = 0
+    for list in itertools.product(*listOLists):
+        temp = patrick(train_X, test_X, train_Y, test_Y, list[0], list[1], list[2], list[3], list[4])
+        print(count, temp)
+        myArray.append(temp)
+        count = count + 1
+
+    new = sorted(myArray, key=lambda x: x[-1])
+    for i in new:
+        print(i)
+
 
 def patrick(train_X, test_X, train_Y, test_Y, f,s,t,a,lr):
 
     model_sklearn = MLPClassifier(max_iter=100000, hidden_layer_sizes=(f, s, t), activation=a,
                                   learning_rate_init=lr, )
     model_sklearn.fit(train_X, train_Y)
-    # print("Training")
-    # pred_X_train_sklearn = model_sklearn.predict(train_X)
-    # cm = classification_report(train_Y, pred_X_train_sklearn)
-    # print(cm)
-    print("Test")
     pred_y_test_sklearn = model_sklearn.predict(test_X)
+
+
+    results = r2_score(test_Y, pred_y_test_sklearn)
+    print('R2 score: ', results)
+    mse = mean_squared_error(test_Y, pred_y_test_sklearn)
+    rmse = mse ** 0.5
+    print("MSE: %.4f" % mse)
+    print("RMSE: %.4f" % rmse)
     cm1 = classification_report(test_Y, pred_y_test_sklearn)
     print(cm1)
+
+
+    # cm = confusion_matrix(test_Y, pred_y_test_sklearn)
+    # plt.figure()
+    # plot_confusion_matrix(cm, classes=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17'], title="Patrick's Code")
+    # plt.show()
 
 
 def tina(train_X, test_X, train_Y, test_Y):
@@ -111,6 +167,15 @@ def tina(train_X, test_X, train_Y, test_Y):
     print("MSE: %.4f" % mse)
     print("RMSE: %.4f" % rmse)
 
+    # cm1 = classification_report(test_Y, y_test_preds)
+    # print(cm1)
+
+
+    # cm = confusion_matrix(test_Y.argmax, y_test_preds)
+    # print(unique(test_Y))
+    # plt.figure()
+    # plot_confusion_matrix(cm, classes=['0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10','11','12','13','14'], title="Tinas's Code")
+    # plt.show()
 
 def aimee(train_X, test_X, train_Y, test_Y):
     model = Sequential()
@@ -123,25 +188,27 @@ def aimee(train_X, test_X, train_Y, test_Y):
     loss = model.evaluate(test_X,  test_Y,verbose=2)
     print("The mean square error is:", loss)
 
-def calub(train_X, test_X, train_Y, test_Y):
+def caleb(train_X, test_X, train_Y, test_Y):
     pass
 
 
 def main():
 
-
-
-
     train_X, test_X, train_Y, test_Y = gendata(False)
-
     pcaTrain_X, pcaTest_X, pcaTrain_Y, pcaTest_Y = gendata(True)
     print("done preprocessing")
 
-    print("Starting Patricks Code for 128, 64, 32, 'relu', 0.01 ")
-    patrick(train_X, test_X, train_Y, test_Y, 128, 64, 32, 'relu', 0.01)
-    
-    print("Starting Aimee Code")
+    print("Starting Patricks Code\n")
+    print("----------------------Patrick Code Results----------------------------")
+    patrick(train_X, test_X, train_Y, test_Y, 32, 16, 64, 'logistic', 0.01)
+
+    print("Starting Aimee Code\n")
+    print("----------------------Aimee Code Results----------------------------")
     aimee(pcaTrain_X, pcaTest_X, pcaTrain_Y, pcaTest_Y )
+
+    print("\nStarting Tina Code\n")
+    print("----------------------Tina Code Results----------------------------")
+    tina(pcaTrain_X, pcaTest_X, pcaTrain_Y, pcaTest_Y)
     
     
 
