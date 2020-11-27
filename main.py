@@ -188,7 +188,7 @@ def aimee(train_X, test_X, train_Y, test_Y):
     model.add(Dense(units = 1, kernel_initializer =  'normal'))
     adam=optimizers.Adam(lr=0.001,  epsilon=None, decay=0.0, amsgrad=False)
     model.compile(optimizer=adam, loss='mean_squared_error', metrics=[soft_acc])
-    model.fit(train_X, train_Y, epochs=200,verbose=2)
+    model.fit(train_X, train_Y, epochs=15000,verbose=2)
     loss,accuracy = model.evaluate(test_X,  test_Y,verbose=2)
     print("The mean square error is:", loss, "The accuracy is: ")
 
