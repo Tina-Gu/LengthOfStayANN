@@ -14,6 +14,7 @@ from keras.layers import Dropout
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import itertools
+import keras.backend as K
 
 
 
@@ -176,6 +177,9 @@ def tina(train_X, test_X, train_Y, test_Y):
     # plt.figure()
     # plot_confusion_matrix(cm, classes=['0', '1', '2', '3', '4', '5', '6', '7', '8', '9','10','11','12','13','14'], title="Tinas's Code")
     # plt.show()
+    
+def soft_acc(y_true, y_pred):
+    return K.mean(K.equal(K.round(y_true), K.round(y_pred)))
 
 def aimee(train_X, test_X, train_Y, test_Y):
     model = Sequential()
@@ -183,10 +187,10 @@ def aimee(train_X, test_X, train_Y, test_Y):
     model.add(Dense(units = 17, kernel_initializer =  'normal',activation = 'relu'))
     model.add(Dense(units = 1, kernel_initializer =  'normal'))
     adam=optimizers.Adam(lr=0.001,  epsilon=None, decay=0.0, amsgrad=False)
-    model.compile(optimizer=adam, loss='mean_squared_error') 
+    model.compile(optimizer=adam, loss='mean_squared_error', metrics=[soft_acc])
     model.fit(train_X, train_Y, epochs=200,verbose=2)
-    loss = model.evaluate(test_X,  test_Y,verbose=2)
-    print("The mean square error is:", loss)
+    loss,accuracy = model.evaluate(test_X,  test_Y,verbose=2)
+    print("The mean square error is:", loss, "The accuracy is: ")
 
 def caleb(train_X, test_X, train_Y, test_Y):
     pass
