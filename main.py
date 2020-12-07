@@ -17,6 +17,7 @@ from keras import optimizers
 from keras.models import Sequential
 from keras.layers import Dense
 from keras import losses
+from sklearn.utils import class_weight
 from keras.layers import Dropout
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
@@ -162,18 +163,38 @@ def patrick(train_X, test_X, train_Y, test_Y, f,s,t,a,lr):
     # plot_confusion_matrix(cm, classes=['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17'], title="Patrick's Code")
     # plt.show()
 
-
+#It needs at least tensorflow(1.14) and Sklearn(0.22).
+class_weights = class_weight.compute_class_weight('balanced', np.unique(train_Y), train_Y)
 def tina(train_X, test_X, train_Y, test_Y):
-
-    reg_model = RandomForestRegressor(random_state=0)
-    reg_model.fit(train_X, train_Y)
-    y_test_preds = reg_model.predict(test_X)
-    results = r2_score(test_Y, y_test_preds)
-    print('R2 score: ', results)
-    mse = mean_squared_error(test_Y, y_test_preds)
-    rmse = mse ** 0.5
-    print("MSE: %.4f" % mse)
-    print("RMSE: %.4f" % rmse)
+    y_train = train_Y - 1
+    y_test = test_Y - 1
+    #output size: 17
+    output_size = train_Y.max() - train_Y.min + 1
+    model = tf.keras.Sequential()
+    #34input, 512hidden 
+    model.add(layers.Dense(512, input_shape=(34,), activation='relu'))
+    model.add(layers.Dropout(0.5))
+    #512input,1024 hidden
+    model.add(layers.Dense(1024, activation='relu'))
+    model.add(layers.Dropout(0.5))
+    #32*32=1024
+    model.add(tf.keras.layers.Reshape((32, 32, 1))) 
+    model.add(layers.Conv2D(64, 3, activation='relu'))
+    model.add(layers.Conv2D(32, 3, activation='relu'))
+    model.add(tf.keras.layers.Flatten())
+    #17output
+    model.add(layers.Dense(output_size, kernel_initializer='glorot_uniform'))
+    model.summary()
+    
+    lr=0.01
+    epoch = 10000
+    sgd = optimizers.SGD(lr, decay=1e-6, momentum=0.9, nesterov=True)
+    model.compile(loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True), optimizer=sgd, metrics=['accuracy'])
+    # here we use the test_set as the validation_set    
+    model.fit(train_X,y_train,batch_size=64,epochs=epoch,verbose=2,validation_data=(test_X,y_test), class_weight=class_weights)
+    # get the final accuracy
+    score = model.evaluate(test_X,y_test,verbose=0)
+    print(score)
 
     # cm1 = classification_report(test_Y, y_test_preds)
     # print(cm1)
