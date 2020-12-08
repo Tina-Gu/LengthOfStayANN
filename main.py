@@ -123,10 +123,10 @@ def plot_confusion_matrix(cm, classes, title,normalize=True, cmap=plt.cm.Blues):
     plt.xlabel('Predicted label')
     plt.tight_layout()
 
-def brute_force_parameters():
-
-    listOLists = [[128, 64, 32, 16], [128, 64, 32, 16], [128, 64, 32, 16], ['identity', 'logistic', 'tanh', 'relu'],
-                  [0.001]]
+def brute_force_parameters(train_X, test_X, train_Y, test_Y,):
+    myArray = []
+    listOLists = [[256,128, 64, 32, 16], [256,128, 64, 32, 16], [256,128, 64, 32, 16], ['identity', 'logistic', 'tanh', 'relu'],
+                  [0.1,0.01,0.001]]
     count = 0
     for list in itertools.product(*listOLists):
         temp = patrick(train_X, test_X, train_Y, test_Y, list[0], list[1], list[2], list[3], list[4])
@@ -233,7 +233,7 @@ def main():
 
     print("Starting Patricks Code\n")
     print("----------------------Patrick Code Results----------------------------")
-    patrick(train_X, test_X, train_Y, test_Y, 32, 16, 64, 'logistic', 0.01)
+    patrick(train_X, test_X, train_Y, test_Y, 32, 32, 32, 'tanh', 0.01)
 
     print("Starting Aimee Code\n")
     print("----------------------Aimee Code Results----------------------------")
@@ -242,11 +242,11 @@ def main():
     print("\nStarting Tina Code\n")
     print("----------------------Tina Code Results----------------------------")
     tina(pcaTrain_X, pcaTest_X, pcaTrain_Y, pcaTest_Y)
-    
+
     print("Starting Caleb Code\n")
     print("----------------------Caleb Code Results----------------------------")
     caleb(pcaTrain_X, pcaTest_X, pcaTrain_Y, pcaTest_Y )
-    
+
     
 
 
