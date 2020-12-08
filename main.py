@@ -22,6 +22,7 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import itertools
 import keras.backend as K
+from sklearn.utils import class_weight
 
 
 
@@ -164,16 +165,40 @@ def patrick(train_X, test_X, train_Y, test_Y, f,s,t,a,lr):
 
 
 def tina(train_X, test_X, train_Y, test_Y):
+    train_Y = train_Y - 1
+    test_Y = test_Y - 1
+    output_size = 17
+    model = tf.keras.Sequential()
+    #34input, 512hidden
+    model.add(layers.Dense(512, input_shape=(34,), activation='relu'))
+    model.add(layers.Dropout(0.5))
+    #512input,1024 hidden
+    model.add(layers.Dense(1024, activation='relu'))
+    model.add(layers.Dropout(0.5))
+    #32*32=1024
+    model.add(tf.keras.layers.Reshape((32, 32, 1)))
+    #64 kernel，64 feature map
+    model.add(layers.Conv2D(64, 3, activation='relu'))
+    model.add(layers.Conv2D(32, 3, activation='relu'))
+    model.add(tf.keras.layers.Flatten())
+    #17 output
+    model.add(layers.Dense(output_size, kernel_initializer='glorot_uniform'))
+    model.summary()
 
-    reg_model = RandomForestRegressor(random_state=0)
-    reg_model.fit(train_X, train_Y)
-    y_test_preds = reg_model.predict(test_X)
-    results = r2_score(test_Y, y_test_preds)
-    print('R2 score: ', results)
-    mse = mean_squared_error(test_Y, y_test_preds)
-    rmse = mse ** 0.5
-    print("MSE: %.4f" % mse)
-    print("RMSE: %.4f" % rmse)
+    class_weights = class_weight.compute_class_weight('balanced',
+                                                np.unique(train_Y),
+                                                train_Y)
+    lr=0.01
+    epoch = 10000
+    sgd = optimizers.SGD(lr, decay=1e-6, momentum=0.9, nesterov=True)
+    model.compile(loss = keras.losses.SparseCategoricalCrossentropy
+                  (from_logits=True), optimizer=sgd, metrics=['accuracy'])
+
+    # here we use the test_set as the validation_set    
+    model.fit(train_X,train_Y,batch_size=64,epochs=epoch,verbose=2,
+              validation_data=(test_X,test_Y), class_weight=class_weights)
+    score = model.evaluate(test_X,test_Y,verbose=0)
+    print(score)
 
     # cm1 = classification_report(test_Y, y_test_preds)
     # print(cm1)
